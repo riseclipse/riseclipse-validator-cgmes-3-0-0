@@ -1,0 +1,125 @@
+/*
+*************************************************************************
+**  Copyright (c) 2022 CentraleSupélec & EDF.
+**  All rights reserved. This program and the accompanying materials
+**  are made available under the terms of the Eclipse Public License v2.0
+**  which accompanies this distribution, and is available at
+**  https://www.eclipse.org/legal/epl-v20.html
+** 
+**  This file is part of the RiseClipse tool
+**  
+**  Contributors:
+**      Computer Science Department, CentraleSupélec
+**      EDF R&D
+**  Contacts:
+**      dominique.marcadet@centralesupelec.fr
+**      aurelie.dehouck-neveu@edf.fr
+**  Web site:
+**      https://riseclipse.github.io
+*************************************************************************
+*/
+package fr.centralesupelec.edf.riseclipse.cim.cgmes_v3_0_0.validator.ui.component;
+
+import java.awt.Component;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.util.List;
+
+import javax.swing.JCheckBox;
+import javax.swing.JTree;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeCellRenderer;
+import javax.swing.tree.TreePath;
+
+@SuppressWarnings( "serial" )
+public class TreeFilePane extends JTree {
+
+    private DefaultMutableTreeNode root;
+
+    public TreeFilePane( File fileRoot ) {
+        root = new DefaultMutableTreeNode( new FileCheckBox( fileRoot ) );
+        setModel( new DefaultTreeModel( root ) );
+        setShowsRootHandles( true );
+
+        createChildren( fileRoot, root );
+
+        setCellRenderer( new FileCellRenderer() );
+
+        addMouseListener( new MouseAdapter() {
+            @Override
+            public void mousePressed( MouseEvent e ) {
+                int selRow = getRowForLocation( e.getX(), e.getY() );
+
+                if( selRow != -1 ) {
+                    TreePath selPath = getPathForLocation( e.getX(), e.getY() );
+                    DefaultMutableTreeNode node = (( DefaultMutableTreeNode ) selPath.getLastPathComponent() );
+                    FileCheckBox checkbox = ( FileCheckBox ) node.getUserObject();
+                    propagateInTree( node, ! checkbox.getCheckBox().isSelected() );
+                    repaint();
+                }
+            }
+            
+            private void propagateInTree( DefaultMutableTreeNode node, boolean selected ) {
+                FileCheckBox checkbox = ( FileCheckBox ) node.getUserObject();
+                checkbox.getCheckBox().setSelected( selected );
+                for( int i = 0; i < node.getChildCount(); ++i ) {
+                    propagateInTree( ( DefaultMutableTreeNode ) node.getChildAt( i ), selected );
+                }
+            }
+        } );
+
+    }
+
+    private void createChildren( File fileRoot, DefaultMutableTreeNode node ) {
+        File[] files = fileRoot.listFiles();
+        if( files == null ) return;
+
+        for( File file : files ) {
+        	// Files started with a dot are discarded
+        	// This is to avoid an exception when a file is not an OCL one.
+        	// It may happen with the .project file 
+        	if( file.getName().startsWith( "." )) continue;
+            DefaultMutableTreeNode childNode = new DefaultMutableTreeNode( new FileCheckBox( file ));
+            node.add( childNode );
+            if( file.isDirectory() ) {
+                createChildren( file, childNode );
+            }
+        }
+    }
+
+    protected class FileCellRenderer implements TreeCellRenderer {
+
+        @Override
+        public Component getTreeCellRendererComponent( JTree tree, Object value, boolean selected, boolean expanded,
+                boolean leaf, int row, boolean hasFocus ) {
+            DefaultMutableTreeNode node = ( DefaultMutableTreeNode ) value;
+            FileCheckBox file = ( FileCheckBox ) node.getUserObject();
+            JCheckBox checkbox = file.getCheckBox();
+            checkbox.setEnabled( isEnabled() );
+            checkbox.setFont( getFont() );
+            checkbox.setFocusPainted( false );
+            checkbox.setBorderPainted( true );
+            return checkbox;
+        }
+    }
+
+    public void getSelectedFiles( List< File > oclFiles ) {
+        getSelectedFiles( root, oclFiles );
+    }
+
+    private void getSelectedFiles( DefaultMutableTreeNode node, List< File > oclFiles ) {
+        FileCheckBox checkbox = ( FileCheckBox ) node.getUserObject();
+        if( checkbox.getFile().isFile() ) {
+            if( checkbox.getCheckBox().isSelected() ) {
+                oclFiles.add( checkbox.getFile() );
+            }
+        }
+        else {
+            for( int i = 0; i < node.getChildCount(); ++i ) {
+                getSelectedFiles( ( DefaultMutableTreeNode ) node.getChildAt( i ), oclFiles );
+            }
+        }
+    }
+}

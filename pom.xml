@@ -146,7 +146,7 @@
     <dependency>
       <groupId>io.github.riseclipse</groupId>
       <artifactId>fr.centralesupelec.edf.riseclipse.main</artifactId>
-      <version>1.2.3</version>
+      <version>1.2.5</version>
     </dependency>
     <dependency>
       <groupId>io.github.riseclipse</groupId>
@@ -155,35 +155,40 @@
     </dependency>
     <dependency>
       <groupId>io.github.riseclipse</groupId>
+      <artifactId>fr.centralesupelec.edf.riseclipse.cim.util</artifactId>
+      <version>1.2.1</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.riseclipse</groupId>
       <artifactId>fr.centralesupelec.edf.riseclipse.cim.headerModel</artifactId>
-      <version>1.2.0</version>
+      <version>1.2.1</version>
     </dependency>
     <dependency>
       <groupId>io.github.riseclipse</groupId>
       <artifactId>fr.centralesupelec.edf.riseclipse.cim.headerModel.edit</artifactId>
-      <version>1.2.0</version>
+      <version>1.2.1</version>
     </dependency>
     <dependency>
       <groupId>io.github.riseclipse</groupId>
       <artifactId>fr.centralesupelec.edf.riseclipse.cim.cgmes-v3.0.0</artifactId>
-      <version>1.0.0</version>
+      <version>1.0.1</version>
     </dependency>
     <dependency>
       <groupId>io.github.riseclipse</groupId>
       <artifactId>fr.centralesupelec.edf.riseclipse.cim.cgmes-v3.0.0.edit</artifactId>
-      <version>1.0.0</version>
+      <version>1.0.1</version>
     </dependency>
     <dependency>
       <groupId>io.github.riseclipse</groupId>
       <artifactId>fr.centralesupelec.edf.riseclipse.cim.cgmes-v3.0.0.utilities</artifactId>
-      <version>1.0.0</version>
+      <version>1.0.1</version>
     </dependency>
   </dependencies>
 
 
   <modules>
-    <module>fr.centralesupelec.edf.riseclipse.cim.cgmes-v3.0.0.validator</module>
-    <!--module>fr.centralesupelec.edf.riseclipse.cim.cgmes-v3.0.0.validator.ui</module-->
+    <module>fr.centralesupelec.edf.riseclipse.cim.cgmes-v3_0_0.validator</module>
+    <module>fr.centralesupelec.edf.riseclipse.cim.cgmes-v3_0_0.validator.ui</module>
   </modules>
 
 </project>

@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Ui
+Bundle-SymbolicName: fr.centralesupelec.edf.riseclipse.cim.cgmes-v3.0.0.validator.ui
+Bundle-Version: 1.1.0.qualifier
+Automatic-Module-Name: fr.centralesupelec.edf.riseclipse.cim.cim16.entsoe.tools.ui
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Require-Bundle: fr.centralesupelec.edf.riseclipse.main,
+ fr.centralesupelec.edf.riseclipse.cim.cgmes-v3.0.0.validator
