@@ -39,7 +39,7 @@
   </parent>
 
   <properties>
-    <toolName>RiseClipseValidatorCGMES</toolName>
+    <toolName>RiseClipseValidatorCGMES3</toolName>
   </properties>
 
   <build>

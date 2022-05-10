@@ -66,6 +66,8 @@ import org.eclipse.ocl.pivot.validation.ComposedEValidator;
 
 public class RiseClipseValidatorCGMES {
 
+    private static final String TOOL_VERSION = "1.0.0-SNAPSHOT (9 May 2022)";
+
     private static final String HELP_OPTION      = "help";
     private static final String ERROR_OPTION     = "error";
     private static final String WARNING_OPTION   = "warning";
@@ -93,7 +95,6 @@ public class RiseClipseValidatorCGMES {
     private static CimItemProviderAdapterFactory adapter;
     private static CimModelLoader loader;
     private static String outputFile;
-    private static @NonNull IRiseClipseConsole console = new TextRiseClipseConsole();;
 
     private static void usage() {
         new HelpFormatter().printUsage( new PrintWriter( System.out, true ), 120, "RiseClipseValidatorCGMES", options );
@@ -103,6 +104,7 @@ public class RiseClipseValidatorCGMES {
     private static void help() {
         displayLegal();
         
+        IRiseClipseConsole console = AbstractRiseClipseConsole.getConsole();
         console.setLevel( Severity.INFO );
         console.setFormatString( INFO_FORMAT_STRING );
 
@@ -115,9 +117,10 @@ public class RiseClipseValidatorCGMES {
     }
 
     public static void displayLegal() {
+        IRiseClipseConsole console = AbstractRiseClipseConsole.getConsole();
         Severity oldLevel = console.setLevel( Severity.INFO );
         String oldFormat = console.setFormatString( INFO_FORMAT_STRING );
-        
+
         console.info( VALIDATOR_CIM_CATEGORY, 0, "Copyright (c) 2022 CentraleSupélec & EDF." );
         console.info( VALIDATOR_CIM_CATEGORY, 0, "All rights reserved. This program and the accompanying materials" );
         console.info( VALIDATOR_CIM_CATEGORY, 0, "are made available under the terms of the Eclipse Public License v2.0" );
@@ -134,7 +137,7 @@ public class RiseClipseValidatorCGMES {
         console.info( VALIDATOR_CIM_CATEGORY, 0, "Web site:" );
         console.info( VALIDATOR_CIM_CATEGORY, 0, "    https://riseclipse.github.io/" );
         console.info( VALIDATOR_CIM_CATEGORY, 0, "" );
-        console.info( VALIDATOR_CIM_CATEGORY, 0, "RiseClipseValidatorCGMES version: 1.0.0 (29 April 2022)" );
+        console.info( VALIDATOR_CIM_CATEGORY, 0, "RiseClipseValidatorCGMES3 version: " + TOOL_VERSION );
         console.info( VALIDATOR_CIM_CATEGORY, 0, "" );
 
         console.setFormatString( oldFormat );
@@ -205,6 +208,7 @@ public class RiseClipseValidatorCGMES {
             return;
         }
 
+        IRiseClipseConsole console = AbstractRiseClipseConsole.getConsole();
         if( cmd.hasOption( USE_COLOR_OPTION )) console = new TextRiseClipseConsole( true );
         if( cmd.hasOption(      HELP_OPTION )) help();
 
@@ -232,22 +236,23 @@ public class RiseClipseValidatorCGMES {
         prepare( oclFiles );
         if( merge ) {
             for( int i = 0; i < cimFiles.size(); ++i ) {
-                load( console, cimFiles.get( i ));
+                load( cimFiles.get( i ));
             }
             loader.finalizeLoad( console );
-            run( console );
+            run();
         }
         else {
             for( int i = 0; i < cimFiles.size(); ++i ) {
                 loader.reset();
-                load( console, cimFiles.get( i ));
+                load( cimFiles.get( i ));
                 loader.finalizeLoad( console );
-                run( console );
+                run();
             }
         }
     }
     
     private static void getFiles( Path path ) {
+        IRiseClipseConsole console = AbstractRiseClipseConsole.getConsole();
         if( path.getName( path.getNameCount() - 1 ).toString().startsWith( "." )) {
             if( ! keepDotFiles ) {
                 console.info( VALIDATOR_CIM_CATEGORY, 0, path, " is ignored because it starts with a dot" );
@@ -285,15 +290,16 @@ public class RiseClipseValidatorCGMES {
     }
 
     public static void prepare( List< String > oclFiles ) {
-        IRiseClipseConsole console = AbstractRiseClipseConsole.getConsole();
+        @NonNull IRiseClipseConsole console = AbstractRiseClipseConsole.getConsole();
         
         CimPackage cimPkg = CimPackage.eINSTANCE;
         if( cimPkg == null ) {
-            //throw new RiseClipseFatalException( "CIM package not found", null );
+            console.emergency( VALIDATOR_CIM_CATEGORY, 0, "CIM package not found" );
+            return;
         }
         ModelDescriptionPackage modelPkg = ModelDescriptionPackage.eINSTANCE;
         if( modelPkg == null ) {
-            //throw new RiseClipseFatalException( "ModelDescription package not found", null );
+            console.emergency( VALIDATOR_CIM_CATEGORY, 0, "ModelDescription package not found" );
         }
 
         ComposedEValidator validator = ComposedEValidator.install( cimPkg );
@@ -311,10 +317,11 @@ public class RiseClipseValidatorCGMES {
         adapter = new CimItemProviderAdapterFactory();
     }
 
-    public static void run( IRiseClipseConsole console ) {
+    public static void run() {
+        IRiseClipseConsole console = AbstractRiseClipseConsole.getConsole();
         for( Resource resource : loader.getResourceSet().getResources() ) {
             // Some empty resources may be created when other URI are present
-            if( resource.getContents().size() > 0 ) {
+            if( ! resource.getContents().isEmpty() ) {
                 console.info( VALIDATOR_CIM_CATEGORY, 0, "Validating file: ", resource.getURI().lastSegment() );
                 validate( resource, adapter );
             }
@@ -324,7 +331,7 @@ public class RiseClipseValidatorCGMES {
     private static void validate( @NonNull Resource resource, final AdapterFactory adapter ) {
         IRiseClipseConsole console = AbstractRiseClipseConsole.getConsole();
         
-        Map< Object, Object > context = new HashMap< Object, Object >();
+        Map< Object, Object > context = new HashMap<>();
         SubstitutionLabelProvider substitutionLabelProvider = new EValidator.SubstitutionLabelProvider() {
 
             @Override
@@ -390,18 +397,21 @@ public class RiseClipseValidatorCGMES {
                 case Diagnostic.ERROR:
                     console.error( VALIDATOR_CIM_CATEGORY, 0, message );
                     break;
+                default:
+                    break;
                 }
             }
         }
     }
 
-    private static void load( IRiseClipseConsole console, String cimFile ) {
+    private static void load( String cimFile ) {
         loader.loadWithoutValidation( cimFile );
     }
 
-    public static void resetLoadFinalize( IRiseClipseConsole console, String cimFile ) {
+    public static void resetLoadFinalize( String cimFile ) {
         loader.reset();
-        load( console, cimFile );
+        load( cimFile );
+        IRiseClipseConsole console = AbstractRiseClipseConsole.getConsole();
         loader.finalizeLoad( console );
     }
 
