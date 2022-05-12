@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Tools
 Bundle-SymbolicName: fr.centralesupelec.edf.riseclipse.cim.cgmes-v3.0.0.validator
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 1.0.1.qualifier
 Automatic-Module-Name: fr.centralesupelec.edf.riseclipse.cim.cim16.entsoe-v2.4.15.tools
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Require-Bundle: org.eclipse.core.runtime,
@@ -16,11 +16,11 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ocl.xtext.completeocl,
  org.eclipse.ocl.xtext.oclstdlib,
  org.apache.commons.lang3,
- fr.centralesupelec.edf.riseclipse.main;bundle-version="1.2.3",
- fr.centralesupelec.edf.riseclipse.cim.util;bundle-version="1.2.0",
- fr.centralesupelec.edf.riseclipse.cim.headerModel;bundle-version="1.2.0",
+ fr.centralesupelec.edf.riseclipse.main;bundle-version="1.2.5",
+ fr.centralesupelec.edf.riseclipse.cim.util;bundle-version="1.2.1",
+ fr.centralesupelec.edf.riseclipse.cim.headerModel;bundle-version="1.2.1",
  fr.centralesupelec.edf.riseclipse.validation.ocl;bundle-version="1.2.2",
- fr.centralesupelec.edf.riseclipse.cim.cgmes-v3.0.0;bundle-version="1.0.0",
- fr.centralesupelec.edf.riseclipse.cim.cgmes-v3.0.0.edit;bundle-version="1.0.0",
- fr.centralesupelec.edf.riseclipse.cim.cgmes-v3.0.0.utilities;bundle-version="1.0.0"
+ fr.centralesupelec.edf.riseclipse.cim.cgmes-v3.0.0;bundle-version="1.0.1",
+ fr.centralesupelec.edf.riseclipse.cim.cgmes-v3.0.0.edit;bundle-version="1.0.1",
+ fr.centralesupelec.edf.riseclipse.cim.cgmes-v3.0.0.utilities;bundle-version="1.0.1"
 Export-Package: fr.centralesupelec.edf.riseclipse.cim.cgmes_v3_0_0.validator
