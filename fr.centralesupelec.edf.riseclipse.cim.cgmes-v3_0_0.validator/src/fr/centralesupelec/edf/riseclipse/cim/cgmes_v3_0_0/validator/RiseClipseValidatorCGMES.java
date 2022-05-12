@@ -68,33 +68,58 @@ public class RiseClipseValidatorCGMES {
 
     private static final String TOOL_VERSION = "1.0.1-SNAPSHOT (12 May 2022)";
 
-    private static final String HELP_OPTION      = "help";
-    private static final String ERROR_OPTION     = "error";
-    private static final String WARNING_OPTION   = "warning";
-    private static final String NOTICE_OPTION    = "notice";
-    private static final String INFO_OPTION      = "info";
-    private static final String DEBUG_OPTION     = "debug";
-    private static final String MERGE_OPTION     = "merge";
-    private static final String OUTPUT_OPTION    = "output";
-    private static final String FORMAT_OPTION    = "format-string";
-    private static final String USE_COLOR_OPTION = "use-color";
+    private static final String HELP_OPTION             = "help";
+    private static final String HELP_ENVIRONMENT_OPTION = "help-environment";
+    private static final String ERROR_OPTION            = "error";
+    private static final String WARNING_OPTION          = "warning";
+    private static final String NOTICE_OPTION           = "notice";
+    private static final String INFO_OPTION             = "info";
+    private static final String DEBUG_OPTION            = "debug";
+    private static final String MERGE_OPTION            = "merge";
+    private static final String OUTPUT_OPTION           = "output";
+    private static final String FORMAT_OPTION           = "format-string";
+    private static final String USE_COLOR_OPTION        = "use-color";
     private static final String USE_FILENAMES_STARTING_WITH_DOT_OPTION = "use-filenames-starting-with-dot";
     
+    private static final String RISECLIPSE_VARIABLE_PREFIX                    = "RISECLIPSE_";
+    private static final String CONSOLE_LEVEL_VARIABLE_NAME                   = RISECLIPSE_VARIABLE_PREFIX + "CONSOLE_LEVEL";
+    private static final String MERGE_VARIABLE_NAME                           = RISECLIPSE_VARIABLE_PREFIX + "MERGE";
+    private static final String OUTPUT_FILE_VARIABLE_NAME                     = RISECLIPSE_VARIABLE_PREFIX + "OUTPUT_FILE";
+    private static final String USE_COLOR_VARIABLE_NAME                       = RISECLIPSE_VARIABLE_PREFIX + "USE_COLOR";
+    private static final String USE_FILENAMES_STARTING_WITH_DOT_VARIABLE_NAME = RISECLIPSE_VARIABLE_PREFIX + "USE_FILENAMES_STARTING_WITH_DOT";
+    private static final String FORMAT_STRING_VARIABLE_NAME                   = RISECLIPSE_VARIABLE_PREFIX + "FORMAT_STRING";
+
+    private static final String FALSE_VARIABLE_VALUE = "FALSE";
+
+//  private static final String EMERGENCY_KEYWORD = "EMERGENCY";
+//  private static final String ALERT_KEYWORD     = "ALERT";
+//  private static final String CRITICAL_KEYWORD  = "CRITICAL";
+    private static final String ERROR_KEYWORD       = "ERROR";
+    private static final String WARNING_KEYWORD     = "WARNING";
+    private static final String NOTICE_KEYWORD      = "NOTICE";
+    private static final String INFO_KEYWORD        = "INFO";
+    private static final String DEBUG_KEYWORD       = "DEBUG";
+
     private static final String VALIDATOR_CIM_CATEGORY = "CIM/Validator";
     private static final String INFO_FORMAT_STRING = "%6$s%1$-4s%7$s: %4$s";
     
     private static final String OCL_FILE_EXTENSION = ".ocl";
 
     private static @NonNull Options options = new Options();
-    private static boolean keepDotFiles = false;
 
     private static List< @NonNull String> oclFiles = new ArrayList<>();
     private static List< @NonNull String > cimFiles = new ArrayList<>();
 
+    private static Severity consoleLevel = Severity.WARNING;
+    private static String formatString = "%6$s%1$-7s%7$s: [%2$s] %4$s (%5$s:%3$d)";
+    private static boolean useColor = false;
+    private static boolean keepDotFiles = false;
+    private static boolean merge = false;
+    private static String outputFile;
+
     private static OCLValidator oclValidator;
     private static CimItemProviderAdapterFactory adapter;
     private static CimModelLoader loader;
-    private static String outputFile;
 
     private static void usage() {
         new HelpFormatter().printUsage( new PrintWriter( System.out, true ), 120, "RiseClipseValidatorCGMES", options );
@@ -116,6 +141,89 @@ public class RiseClipseValidatorCGMES {
         System.exit( -1 );
     }
 
+    private static void helpEnvironment() {
+        IRiseClipseConsole console = AbstractRiseClipseConsole.getConsole();
+        console.setLevel( Severity.INFO );
+        console.setFormatString( INFO_FORMAT_STRING );
+        
+        displayLegal();
+        
+        console.info( VALIDATOR_CIM_CATEGORY, 0,
+                      "The folowing environment variables may be used in addition to command line options, "
+                    + "however, the latter have precedence." );
+        console.info( VALIDATOR_CIM_CATEGORY, 0,
+                      "\t" + CONSOLE_LEVEL_VARIABLE_NAME + ": if its value is one of (ignoring case) "
+                    + ERROR_KEYWORD + ", " + WARNING_KEYWORD + ", " + NOTICE_KEYWORD + ", " + INFO_KEYWORD + " or " + DEBUG_KEYWORD
+                    + ", then the corresponding level is set, otherwise the variable is ignored." );
+        console.info( VALIDATOR_CIM_CATEGORY, 0,
+                      "\t" + OUTPUT_FILE_VARIABLE_NAME + ": name of the output file for messages." );
+        console.info( VALIDATOR_CIM_CATEGORY, 0,
+                      "\t" + MERGE_VARIABLE_NAME + ": if its value is not equal to FALSE "
+                    + "(ignoring case), it is equivalent to the use of " + MERGE_OPTION + " option." );
+        console.info( VALIDATOR_CIM_CATEGORY, 0,
+                      "\t" + FORMAT_STRING_VARIABLE_NAME + ": string used to format messages (see description of " + FORMAT_OPTION + " option)." );
+        console.info( VALIDATOR_CIM_CATEGORY, 0,
+                      "\t" + USE_COLOR_VARIABLE_NAME + ": if its value is not equal to FALSE "
+                    + "(ignoring case), it is equivalent to the use of " + USE_COLOR_OPTION + " option." );
+        console.info( VALIDATOR_CIM_CATEGORY, 0, "\t" + USE_FILENAMES_STARTING_WITH_DOT_VARIABLE_NAME + ": if its value is not equal to FALSE "
+                    + "(ignoring case), it is equivalent to the use of " + USE_FILENAMES_STARTING_WITH_DOT_OPTION + " option." );
+        System.exit( 0 );
+    }
+    
+    private static void setOptionsFromEnvironmentVariables() {
+        String s = System.getenv( CONSOLE_LEVEL_VARIABLE_NAME );
+        if( s != null ) {
+            if( s.equalsIgnoreCase( ERROR_KEYWORD )) {
+                consoleLevel  = Severity.ERROR;
+            }
+            else if( s.equalsIgnoreCase( WARNING_KEYWORD )) {
+                consoleLevel  = Severity.WARNING;
+            }
+            else if( s.equalsIgnoreCase( NOTICE_KEYWORD )) {
+                consoleLevel  = Severity.NOTICE;
+            }
+            else if( s.equalsIgnoreCase( INFO_KEYWORD )) {
+                consoleLevel  = Severity.INFO;
+            }
+            else if( s.equalsIgnoreCase( DEBUG_KEYWORD )) {
+                consoleLevel  = Severity.DEBUG;
+            }
+            else {
+                AbstractRiseClipseConsole.getConsole().warning(
+                    VALIDATOR_CIM_CATEGORY, 0,
+                    "Value of environment variable " + CONSOLE_LEVEL_VARIABLE_NAME + " is not recognized and ignored" );
+            }
+        }
+        
+        outputFile = System.getenv( OUTPUT_FILE_VARIABLE_NAME );
+        
+        s = System.getenv( FORMAT_STRING_VARIABLE_NAME );
+        if( s != null ) {
+            formatString = s;
+        }
+        
+        s = System.getenv( USE_COLOR_VARIABLE_NAME );
+        if( s != null ) {
+            if( ! s.equalsIgnoreCase( FALSE_VARIABLE_VALUE )) {
+                useColor = true;
+            }
+        }
+        
+        s = System.getenv( MERGE_VARIABLE_NAME );
+        if( s != null ) {
+            if( ! s.equalsIgnoreCase( FALSE_VARIABLE_VALUE )) {
+                merge  = true;
+            }
+        }
+        
+        s = System.getenv( USE_FILENAMES_STARTING_WITH_DOT_VARIABLE_NAME );
+        if( s != null ) {
+            if( ! s.equalsIgnoreCase( FALSE_VARIABLE_VALUE )) {
+                keepDotFiles = true;
+            }
+        }
+    }
+    
     public static void displayLegal() {
         IRiseClipseConsole console = AbstractRiseClipseConsole.getConsole();
         Severity oldLevel = console.setLevel( Severity.INFO );
@@ -145,9 +253,15 @@ public class RiseClipseValidatorCGMES {
     }
 
     public static void main( String[] args ) {
+        setOptionsFromEnvironmentVariables();
+        
         options.addOption( Option.builder( "h" )
                                  .longOpt( HELP_OPTION )
                                  .desc( "display help message" )
+                                 .build() );
+        options.addOption( Option.builder( "h" )
+                                 .longOpt( HELP_ENVIRONMENT_OPTION )
+                                 .desc( "display environment variables used" )
                                  .build() );
         options.addOption( Option.builder()
                                  .longOpt( ERROR_OPTION )
@@ -209,24 +323,36 @@ public class RiseClipseValidatorCGMES {
         }
 
         IRiseClipseConsole console = AbstractRiseClipseConsole.getConsole();
-        if( cmd.hasOption( USE_COLOR_OPTION )) console = new TextRiseClipseConsole( true );
-        if( cmd.hasOption(      HELP_OPTION )) help();
+        if( cmd.hasOption(             USE_COLOR_OPTION )) useColor = true;
+        if( useColor ) {
+            console = new TextRiseClipseConsole( true );
+        }
+        if( cmd.hasOption(                  HELP_OPTION )) help();
+        if( cmd.hasOption(      HELP_ENVIRONMENT_OPTION )) helpEnvironment();
 
-        if( cmd.hasOption(   ERROR_OPTION )) console.setLevel( Severity.ERROR );
-        if( cmd.hasOption( WARNING_OPTION )) console.setLevel( Severity.WARNING );
-        if( cmd.hasOption(  NOTICE_OPTION )) console.setLevel( Severity.NOTICE );
-        if( cmd.hasOption(    INFO_OPTION )) console.setLevel( Severity.INFO );
-        if( cmd.hasOption(   DEBUG_OPTION )) console.setLevel( Severity.DEBUG );
+        if( cmd.hasOption(   ERROR_OPTION )) consoleLevel = Severity.ERROR;
+        if( cmd.hasOption( WARNING_OPTION )) consoleLevel = Severity.WARNING;
+        if( cmd.hasOption(  NOTICE_OPTION )) consoleLevel = Severity.NOTICE;
+        if( cmd.hasOption(    INFO_OPTION )) consoleLevel = Severity.INFO;
+        if( cmd.hasOption(   DEBUG_OPTION )) consoleLevel = Severity.DEBUG;
+        console.setLevel( consoleLevel );
 
-        boolean merge = false;
         if( cmd.hasOption( MERGE_OPTION )) merge = true;
+        if( cmd.hasOption( USE_FILENAMES_STARTING_WITH_DOT_OPTION )) keepDotFiles = true;
         
         if( cmd.hasOption( OUTPUT_OPTION )) {
+            outputFile = cmd.getOptionValue( OUTPUT_OPTION );
+        }
+        if( outputFile != null ) {
             @NonNull
             Severity level = console.getLevel();
             console = new FileRiseClipseConsole( outputFile );
             console.setLevel( level );
         }
+        if( cmd.hasOption( FORMAT_OPTION )) {
+            formatString = cmd.getOptionValue( FORMAT_OPTION );
+        }
+        console.setFormatString( formatString );
         
         displayLegal();
 
