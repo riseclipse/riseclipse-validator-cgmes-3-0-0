@@ -45,4 +45,6 @@ jobs:
     needs: [call-validate-release-workflow]
     uses: riseclipse/riseclipse-developer/.github/workflows/Shared-Deploy-On-RiseClipseWeb.yml@master
     with:
+      artifact_path: riseclipse-validator-cgmes-3-0-0/fr.centralesupelec.edf.riseclipse.cim.cgmes-v3_0_0.validator/target/RiseClipseValidatorCGMES3
+      release_version: ${{ needs.call-validate-release-workflow.outputs.release_version }}  
       dest_folder: "profiles/CGMES-3%fr.riseclipse.cgmes3%cim"
