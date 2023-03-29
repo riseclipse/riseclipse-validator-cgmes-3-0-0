@@ -20,7 +20,9 @@
 name: Release on GitHub and DockerHub
 
 # This CD workflow switches pre-release to release on GitHub (without rc flag)
-# It also builds and push a docker image of the RiseClipse Validator SCL CLI tool
+# It also 
+#   - builds and push a docker image of the RiseClipse Validator SCL CLI tool
+#   - scp the RiseClipse Validator SCL CLI tool to the corresponding riseclipseweb profile
 
 on: workflow_dispatch
 
@@ -41,10 +43,15 @@ jobs:
       DOCKER_PASSWORD: ${{ secrets.RISECLIPSE_DOCKER_ACCESS_TOKEN }}
 
   call-release-riseclipseweb-workflow:
-    name: Deploy on riseclipseweb
+    name: Release on riseclipseweb
     needs: [call-validate-release-workflow]
-    uses: riseclipse/riseclipse-developer/.github/workflows/Shared-Deploy-On-RiseClipseWeb.yml@master
+    uses: riseclipse/riseclipse-developer/.github/workflows/Shared-Release-On-RiseClipseWeb.yml@master
     with:
       artifact_path: riseclipse-validator-cgmes-3-0-0/fr.centralesupelec.edf.riseclipse.cim.cgmes-v3_0_0.validator/target/RiseClipseValidatorCGMES3
       release_version: ${{ needs.call-validate-release-workflow.outputs.release_version }}  
       dest_folder: "profiles/CGMES-3%fr.riseclipse.cgmes3%cim"
+    secrets:
+      REMOTE_WEB_HOSTNAME: ${{ secrets.REMOTE_WEB_HOSTNAME }}
+      REMOTE_WEB_USERNAME: ${{ secrets.REMOTE_WEB_USERNAME }}
+      REMOTE_WEB_PASSWORD: ${{ secrets.REMOTE_WEB_PASSWORD }}
+      REMOTE_WEB_FOLDER: ${{ secrets.REMOTE_WEB_FOLDER }}
