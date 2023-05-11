@@ -1,6 +1,6 @@
 /*
 *************************************************************************
-**  Copyright (c) 2022 CentraleSupélec & EDF.
+**  Copyright (c) 2022-2023 CentraleSupélec & EDF.
 **  All rights reserved. This program and the accompanying materials
 **  are made available under the terms of the Eclipse Public License v2.0
 **  which accompanies this distribution, and is available at
@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -75,6 +76,7 @@ public class RiseClipseValidatorCGMES {
     private static final String NOTICE_OPTION           = "notice";
     private static final String INFO_OPTION             = "info";
     private static final String DEBUG_OPTION            = "debug";
+    private static final String PRINT_STATISTICS_OPTION = "print-statistics";
     private static final String MERGE_OPTION            = "merge";
     private static final String OUTPUT_OPTION           = "output";
     private static final String FORMAT_OPTION           = "format-string";
@@ -83,6 +85,7 @@ public class RiseClipseValidatorCGMES {
     
     private static final String RISECLIPSE_VARIABLE_PREFIX                    = "RISECLIPSE_";
     private static final String CONSOLE_LEVEL_VARIABLE_NAME                   = RISECLIPSE_VARIABLE_PREFIX + "CONSOLE_LEVEL";
+    private static final String PRINT_STATISTICS_VARIABLE_NAME                = RISECLIPSE_VARIABLE_PREFIX + "PRINT_STATISTICS";
     private static final String MERGE_VARIABLE_NAME                           = RISECLIPSE_VARIABLE_PREFIX + "MERGE";
     private static final String OUTPUT_FILE_VARIABLE_NAME                     = RISECLIPSE_VARIABLE_PREFIX + "OUTPUT_FILE";
     private static final String USE_COLOR_VARIABLE_NAME                       = RISECLIPSE_VARIABLE_PREFIX + "USE_COLOR";
@@ -114,6 +117,7 @@ public class RiseClipseValidatorCGMES {
     private static String formatString = "%6$s%1$-7s%7$s: [%2$s] %4$s (%5$s:%3$d)";
     private static boolean useColor = false;
     private static boolean keepDotFiles = false;
+    private static boolean printStatistics = false;
     private static boolean merge = false;
     private static String outputFile;
 
@@ -157,6 +161,9 @@ public class RiseClipseValidatorCGMES {
                     + ", then the corresponding level is set, otherwise the variable is ignored." );
         console.info( VALIDATOR_CIM_CATEGORY, 0,
                       "\t" + OUTPUT_FILE_VARIABLE_NAME + ": name of the output file for messages." );
+        console.info( VALIDATOR_CIM_CATEGORY, 0,
+                      "\t" + PRINT_STATISTICS_VARIABLE_NAME + ": if its value is not equal to FALSE "
+                    + "(ignoring case), it is equivalent to the use of " + PRINT_STATISTICS_OPTION + " option." );
         console.info( VALIDATOR_CIM_CATEGORY, 0,
                       "\t" + MERGE_VARIABLE_NAME + ": if its value is not equal to FALSE "
                     + "(ignoring case), it is equivalent to the use of " + MERGE_OPTION + " option." );
@@ -209,6 +216,13 @@ public class RiseClipseValidatorCGMES {
             }
         }
         
+        s = System.getenv( PRINT_STATISTICS_VARIABLE_NAME );
+        if( s != null ) {
+            if( ! s.equalsIgnoreCase( FALSE_VARIABLE_VALUE )) {
+                printStatistics  = true;
+            }
+        }
+        
         s = System.getenv( MERGE_VARIABLE_NAME );
         if( s != null ) {
             if( ! s.equalsIgnoreCase( FALSE_VARIABLE_VALUE )) {
@@ -229,7 +243,7 @@ public class RiseClipseValidatorCGMES {
         Severity oldLevel = console.setLevel( Severity.INFO );
         String oldFormat = console.setFormatString( INFO_FORMAT_STRING );
 
-        console.info( VALIDATOR_CIM_CATEGORY, 0, "Copyright (c) 2022 CentraleSupélec & EDF." );
+        console.info( VALIDATOR_CIM_CATEGORY, 0, "Copyright (c) 2022-2023 CentraleSupélec & EDF." );
         console.info( VALIDATOR_CIM_CATEGORY, 0, "All rights reserved. This program and the accompanying materials" );
         console.info( VALIDATOR_CIM_CATEGORY, 0, "are made available under the terms of the Eclipse Public License v2.0" );
         console.info( VALIDATOR_CIM_CATEGORY, 0, "which accompanies this distribution, and is available at" );
@@ -259,7 +273,7 @@ public class RiseClipseValidatorCGMES {
                                  .longOpt( HELP_OPTION )
                                  .desc( "display help message" )
                                  .build() );
-        options.addOption( Option.builder( "h" )
+        options.addOption( Option.builder()
                                  .longOpt( HELP_ENVIRONMENT_OPTION )
                                  .desc( "display environment variables used" )
                                  .build() );
@@ -284,6 +298,10 @@ public class RiseClipseValidatorCGMES {
                                  .desc( "display all messages" )
                                  .build() );
         options.addOption( Option.builder()
+                                 .longOpt( PRINT_STATISTICS_OPTION )
+                                 .desc( "statistics about content of ENTSO-E CGMES v3.0.0 are displayed" )
+                                 .build() );
+        options.addOption( Option.builder()
                                  .longOpt( MERGE_OPTION )
                                  .desc( "all ENTSO-E CGMES v3.0.0 files are merged before OCL validation" )
                                  .build() );
@@ -297,9 +315,9 @@ public class RiseClipseValidatorCGMES {
                                  .longOpt( FORMAT_OPTION )
                                  .hasArg()
                                  .argName( "format" )
-                                 .desc( "messages are outputed with a java.util.Formatter using the given format string,"
-                                      + "1$ is severity, 2$ is category, 3$ is line number, 4$ is message, 5$ is filename,"
-                                      + "6$ is color start, 7$ is color end (these last two are only used if the --" + USE_COLOR_OPTION + " option is active),"
+                                 .desc( "messages are outputed with a java.util.Formatter using the given format string, "
+                                      + "1$ is severity, 2$ is category, 3$ is line number, 4$ is message, 5$ is filename, "
+                                      + "6$ is color start, 7$ is color end (these last two are only used if the --" + USE_COLOR_OPTION + " option is active), "
                                       + "default is '%6$s%1$-7s%7$s: [%2$s] %4$s (%5$s:%3$d)'.")
                                  .build() );
         options.addOption( Option.builder()
@@ -337,6 +355,7 @@ public class RiseClipseValidatorCGMES {
         if( cmd.hasOption(   DEBUG_OPTION )) consoleLevel = Severity.DEBUG;
         console.setLevel( consoleLevel );
 
+        if( cmd.hasOption( PRINT_STATISTICS_OPTION )) printStatistics = true;
         if( cmd.hasOption( MERGE_OPTION )) merge = true;
         if( cmd.hasOption( USE_FILENAMES_STARTING_WITH_DOT_OPTION )) keepDotFiles = true;
         
@@ -445,11 +464,17 @@ public class RiseClipseValidatorCGMES {
 
     public static void run() {
         IRiseClipseConsole console = AbstractRiseClipseConsole.getConsole();
+        if( printStatistics ) {
+            loader.getResourceSet().printStatistics( console );
+        }
         for( Resource resource : loader.getResourceSet().getResources() ) {
             // Some empty resources may be created when other URI are present
             if( ! resource.getContents().isEmpty() ) {
                 console.info( VALIDATOR_CIM_CATEGORY, 0, "Validating file: ", resource.getURI().lastSegment() );
+                long startTime = ( new Date() ).getTime();
                 validate( resource, adapter );
+                console.info( VALIDATOR_CIM_CATEGORY, 0, 
+                        "time to validate ", resource.getURI().lastSegment(), ": ", (( new Date() ).getTime() - startTime ) + "ms" );
             }
         }
     }
