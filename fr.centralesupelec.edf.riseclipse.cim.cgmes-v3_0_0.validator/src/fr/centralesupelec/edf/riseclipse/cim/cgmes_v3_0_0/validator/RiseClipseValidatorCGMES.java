@@ -67,7 +67,7 @@ import org.eclipse.ocl.pivot.validation.ComposedEValidator;
 
 public class RiseClipseValidatorCGMES {
 
-    private static final String TOOL_VERSION = "1.0.2-SNAPSHOT (13 May 2022)";
+    private static final String TOOL_VERSION = "1.0.3-SNAPSHOT (11 May 2023)";
 
     private static final String HELP_OPTION             = "help";
     private static final String HELP_ENVIRONMENT_OPTION = "help-environment";
