@@ -75,6 +75,7 @@ public class RiseClipseValidatorCGMES {
     private static final String NOTICE_OPTION           = "notice";
     private static final String INFO_OPTION             = "info";
     private static final String DEBUG_OPTION            = "debug";
+    private static final String PRINT_STATISTICS_OPTION = "print-statistics";
     private static final String MERGE_OPTION            = "merge";
     private static final String OUTPUT_OPTION           = "output";
     private static final String FORMAT_OPTION           = "format-string";
@@ -83,6 +84,7 @@ public class RiseClipseValidatorCGMES {
     
     private static final String RISECLIPSE_VARIABLE_PREFIX                    = "RISECLIPSE_";
     private static final String CONSOLE_LEVEL_VARIABLE_NAME                   = RISECLIPSE_VARIABLE_PREFIX + "CONSOLE_LEVEL";
+    private static final String PRINT_STATISTICS_VARIABLE_NAME                = RISECLIPSE_VARIABLE_PREFIX + "PRINT_STATISTICS";
     private static final String MERGE_VARIABLE_NAME                           = RISECLIPSE_VARIABLE_PREFIX + "MERGE";
     private static final String OUTPUT_FILE_VARIABLE_NAME                     = RISECLIPSE_VARIABLE_PREFIX + "OUTPUT_FILE";
     private static final String USE_COLOR_VARIABLE_NAME                       = RISECLIPSE_VARIABLE_PREFIX + "USE_COLOR";
@@ -114,6 +116,7 @@ public class RiseClipseValidatorCGMES {
     private static String formatString = "%6$s%1$-7s%7$s: [%2$s] %4$s (%5$s:%3$d)";
     private static boolean useColor = false;
     private static boolean keepDotFiles = false;
+    private static boolean printStatistics = false;
     private static boolean merge = false;
     private static String outputFile;
 
@@ -157,6 +160,9 @@ public class RiseClipseValidatorCGMES {
                     + ", then the corresponding level is set, otherwise the variable is ignored." );
         console.info( VALIDATOR_CIM_CATEGORY, 0,
                       "\t" + OUTPUT_FILE_VARIABLE_NAME + ": name of the output file for messages." );
+        console.info( VALIDATOR_CIM_CATEGORY, 0,
+                      "\t" + PRINT_STATISTICS_VARIABLE_NAME + ": if its value is not equal to FALSE "
+                    + "(ignoring case), it is equivalent to the use of " + PRINT_STATISTICS_OPTION + " option." );
         console.info( VALIDATOR_CIM_CATEGORY, 0,
                       "\t" + MERGE_VARIABLE_NAME + ": if its value is not equal to FALSE "
                     + "(ignoring case), it is equivalent to the use of " + MERGE_OPTION + " option." );
@@ -206,6 +212,13 @@ public class RiseClipseValidatorCGMES {
         if( s != null ) {
             if( ! s.equalsIgnoreCase( FALSE_VARIABLE_VALUE )) {
                 useColor = true;
+            }
+        }
+        
+        s = System.getenv( PRINT_STATISTICS_VARIABLE_NAME );
+        if( s != null ) {
+            if( ! s.equalsIgnoreCase( FALSE_VARIABLE_VALUE )) {
+                printStatistics  = true;
             }
         }
         
@@ -284,6 +297,10 @@ public class RiseClipseValidatorCGMES {
                                  .desc( "display all messages" )
                                  .build() );
         options.addOption( Option.builder()
+                                 .longOpt( PRINT_STATISTICS_OPTION )
+                                 .desc( "statistics about content of ENTSO-E CGMES v3.0.0 are displayed" )
+                                 .build() );
+        options.addOption( Option.builder()
                                  .longOpt( MERGE_OPTION )
                                  .desc( "all ENTSO-E CGMES v3.0.0 files are merged before OCL validation" )
                                  .build() );
@@ -337,6 +354,7 @@ public class RiseClipseValidatorCGMES {
         if( cmd.hasOption(   DEBUG_OPTION )) consoleLevel = Severity.DEBUG;
         console.setLevel( consoleLevel );
 
+        if( cmd.hasOption( PRINT_STATISTICS_OPTION )) printStatistics = true;
         if( cmd.hasOption( MERGE_OPTION )) merge = true;
         if( cmd.hasOption( USE_FILENAMES_STARTING_WITH_DOT_OPTION )) keepDotFiles = true;
         
@@ -445,6 +463,9 @@ public class RiseClipseValidatorCGMES {
 
     public static void run() {
         IRiseClipseConsole console = AbstractRiseClipseConsole.getConsole();
+        if( printStatistics ) {
+            loader.getResourceSet().printStatistics( console );
+        }
         for( Resource resource : loader.getResourceSet().getResources() ) {
             // Some empty resources may be created when other URI are present
             if( ! resource.getContents().isEmpty() ) {
