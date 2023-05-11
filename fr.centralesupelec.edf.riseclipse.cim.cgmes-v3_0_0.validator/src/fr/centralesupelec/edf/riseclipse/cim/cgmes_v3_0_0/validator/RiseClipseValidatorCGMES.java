@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -470,7 +471,10 @@ public class RiseClipseValidatorCGMES {
             // Some empty resources may be created when other URI are present
             if( ! resource.getContents().isEmpty() ) {
                 console.info( VALIDATOR_CIM_CATEGORY, 0, "Validating file: ", resource.getURI().lastSegment() );
+                long startTime = ( new Date() ).getTime();
                 validate( resource, adapter );
+                console.info( VALIDATOR_CIM_CATEGORY, 0, 
+                        "time to validate ", resource.getURI().lastSegment(), ": ", (( new Date() ).getTime() - startTime ) + "ms" );
             }
         }
     }
