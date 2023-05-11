@@ -1,6 +1,6 @@
 /*
 *************************************************************************
-**  Copyright (c) 2022 CentraleSupélec & EDF.
+**  Copyright (c) 2022-2023 CentraleSupélec & EDF.
 **  All rights reserved. This program and the accompanying materials
 **  are made available under the terms of the Eclipse Public License v2.0
 **  which accompanies this distribution, and is available at
@@ -243,7 +243,7 @@ public class RiseClipseValidatorCGMES {
         Severity oldLevel = console.setLevel( Severity.INFO );
         String oldFormat = console.setFormatString( INFO_FORMAT_STRING );
 
-        console.info( VALIDATOR_CIM_CATEGORY, 0, "Copyright (c) 2022 CentraleSupélec & EDF." );
+        console.info( VALIDATOR_CIM_CATEGORY, 0, "Copyright (c) 2022-2023 CentraleSupélec & EDF." );
         console.info( VALIDATOR_CIM_CATEGORY, 0, "All rights reserved. This program and the accompanying materials" );
         console.info( VALIDATOR_CIM_CATEGORY, 0, "are made available under the terms of the Eclipse Public License v2.0" );
         console.info( VALIDATOR_CIM_CATEGORY, 0, "which accompanies this distribution, and is available at" );
@@ -273,7 +273,7 @@ public class RiseClipseValidatorCGMES {
                                  .longOpt( HELP_OPTION )
                                  .desc( "display help message" )
                                  .build() );
-        options.addOption( Option.builder( "h" )
+        options.addOption( Option.builder()
                                  .longOpt( HELP_ENVIRONMENT_OPTION )
                                  .desc( "display environment variables used" )
                                  .build() );
@@ -315,9 +315,9 @@ public class RiseClipseValidatorCGMES {
                                  .longOpt( FORMAT_OPTION )
                                  .hasArg()
                                  .argName( "format" )
-                                 .desc( "messages are outputed with a java.util.Formatter using the given format string,"
-                                      + "1$ is severity, 2$ is category, 3$ is line number, 4$ is message, 5$ is filename,"
-                                      + "6$ is color start, 7$ is color end (these last two are only used if the --" + USE_COLOR_OPTION + " option is active),"
+                                 .desc( "messages are outputed with a java.util.Formatter using the given format string, "
+                                      + "1$ is severity, 2$ is category, 3$ is line number, 4$ is message, 5$ is filename, "
+                                      + "6$ is color start, 7$ is color end (these last two are only used if the --" + USE_COLOR_OPTION + " option is active), "
                                       + "default is '%6$s%1$-7s%7$s: [%2$s] %4$s (%5$s:%3$d)'.")
                                  .build() );
         options.addOption( Option.builder()
