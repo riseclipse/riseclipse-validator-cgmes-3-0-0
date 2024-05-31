@@ -64,6 +64,7 @@ import org.eclipse.emf.ecore.util.Diagnostician;
 import org.eclipse.emf.edit.provider.IItemLabelProvider;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.ocl.pivot.validation.ComposedEValidator;
+import org.eclipse.ocl.pivot.validation.ValidationRegistryAdapter;
 
 public class RiseClipseValidatorCGMES {
 
@@ -123,7 +124,9 @@ public class RiseClipseValidatorCGMES {
 
     private static OCLValidator oclValidator;
     private static CimItemProviderAdapterFactory adapter;
-    private static CimModelLoader loader;
+    private static CimModelLoader cimLoader;
+
+    private static ComposedEValidator composedValidator;
 
     private static void usage() {
         new HelpFormatter().printUsage( new PrintWriter( System.out, true ), 120, "RiseClipseValidatorCGMES", options );
@@ -383,14 +386,14 @@ public class RiseClipseValidatorCGMES {
             for( int i = 0; i < cimFiles.size(); ++i ) {
                 load( cimFiles.get( i ));
             }
-            loader.finalizeLoad( console );
+            cimLoader.finalizeLoad( console );
             run();
         }
         else {
             for( int i = 0; i < cimFiles.size(); ++i ) {
-                loader.reset();
+                cimLoader.reset();
                 load( cimFiles.get( i ));
-                loader.finalizeLoad( console );
+                cimLoader.finalizeLoad( console );
                 run();
             }
         }
@@ -447,7 +450,7 @@ public class RiseClipseValidatorCGMES {
             console.emergency( VALIDATOR_CIM_CATEGORY, 0, "ModelDescription package not found" );
         }
 
-        ComposedEValidator validator = ComposedEValidator.install( cimPkg );
+        composedValidator = new ComposedEValidator( null );
 
         if( oclFiles != null ) {
             oclValidator = new OCLValidator( cimPkg, console );
@@ -456,18 +459,19 @@ public class RiseClipseValidatorCGMES {
                 oclValidator.addOCLDocument( oclFiles.get( i ), console );
             }
             oclValidator.prepare( console );
+            composedValidator.addChild( oclValidator );
         }
 
-        loader = new CimModelLoader( );
+        cimLoader = new CimModelLoader( );
         adapter = new CimItemProviderAdapterFactory();
     }
 
     public static void run() {
         IRiseClipseConsole console = AbstractRiseClipseConsole.getConsole();
         if( printStatistics ) {
-            loader.getResourceSet().printStatistics( console );
+            cimLoader.getResourceSet().printStatistics( console );
         }
-        for( Resource resource : loader.getResourceSet().getResources() ) {
+        for( Resource resource : cimLoader.getResourceSet().getResources() ) {
             // Some empty resources may be created when other URI are present
             if( ! resource.getContents().isEmpty() ) {
                 console.info( VALIDATOR_CIM_CATEGORY, 0, "Validating file: ", resource.getURI().lastSegment() );
@@ -479,7 +483,7 @@ public class RiseClipseValidatorCGMES {
         }
     }
 
-    private static void validate( @NonNull Resource resource, final AdapterFactory adapter ) {
+    private static void validate( @NonNull Resource resource, final AdapterFactory cimAdapter ) {
         IRiseClipseConsole console = AbstractRiseClipseConsole.getConsole();
         
         Map< Object, Object > context = new HashMap<>();
@@ -492,7 +496,7 @@ public class RiseClipseValidatorCGMES {
 
             @Override
             public String getObjectLabel( EObject eObject ) {
-                IItemLabelProvider labelProvider = ( IItemLabelProvider ) adapter.adapt( eObject,
+                IItemLabelProvider labelProvider = ( IItemLabelProvider ) cimAdapter.adapt( eObject,
                         IItemLabelProvider.class );
                 return labelProvider.getText( eObject );
             }
@@ -505,9 +509,13 @@ public class RiseClipseValidatorCGMES {
         context.put( EValidator.SubstitutionLabelProvider.class, substitutionLabelProvider );
 
         for( int n = 0; n < resource.getContents().size(); ++n ) {
-            Diagnostic diagnostic = Diagnostician.INSTANCE.validate( resource.getContents().get( n ), context );
+            @NonNull
+            ValidationRegistryAdapter adapter = ValidationRegistryAdapter.getAdapter( cimLoader.getResourceSet() );
+            adapter.put( CimPackage.eINSTANCE, composedValidator );
+            Diagnostician diagnostician = new Diagnostician( adapter );
+            Diagnostic diagnostics = diagnostician.validate( resource.getContents().get( n ), context );
 
-            for( Iterator< Diagnostic > i = diagnostic.getChildren().iterator(); i.hasNext(); ) {
+            for( Iterator< Diagnostic > i = diagnostics.getChildren().iterator(); i.hasNext(); ) {
                 Diagnostic childDiagnostic = i.next();
                 
                 List< ? > data = childDiagnostic.getData();
@@ -556,14 +564,14 @@ public class RiseClipseValidatorCGMES {
     }
 
     private static void load( String cimFile ) {
-        loader.loadWithoutValidation( cimFile );
+        cimLoader.loadWithoutValidation( cimFile );
     }
 
     public static void resetLoadFinalize( String cimFile ) {
-        loader.reset();
+        cimLoader.reset();
         load( cimFile );
         IRiseClipseConsole console = AbstractRiseClipseConsole.getConsole();
-        loader.finalizeLoad( console );
+        cimLoader.finalizeLoad( console );
     }
 
 }
