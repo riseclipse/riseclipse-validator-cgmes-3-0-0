@@ -29,13 +29,13 @@
  
   <groupId>io.github.riseclipse</groupId>
   <artifactId>fr.centralesupelec.edf.riseclipse.cim.cgmes-v3-0-0.validator</artifactId>
-  <version>1.0.3-SNAPSHOT</version>
+  <version>1.0.3</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>io.github.riseclipse</groupId>
     <artifactId>riseclipse-validator-cgmes-3-0-0</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.3</version>
   </parent>
 
   <properties>
