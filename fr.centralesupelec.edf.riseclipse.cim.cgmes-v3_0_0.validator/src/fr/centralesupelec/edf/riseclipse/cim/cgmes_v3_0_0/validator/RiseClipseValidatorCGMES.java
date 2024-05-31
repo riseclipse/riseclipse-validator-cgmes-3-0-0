@@ -67,7 +67,7 @@ import org.eclipse.ocl.pivot.validation.ComposedEValidator;
 
 public class RiseClipseValidatorCGMES {
 
-    private static final String TOOL_VERSION = "1.0.3-SNAPSHOT (11 May 2023)";
+    private static final String TOOL_VERSION = "1.0.3-SNAPSHOT 31 May 2024)";
 
     private static final String HELP_OPTION             = "help";
     private static final String HELP_ENVIRONMENT_OPTION = "help-environment";
@@ -455,7 +455,7 @@ public class RiseClipseValidatorCGMES {
             for( int i = 0; i < oclFiles.size(); ++i ) {
                 oclValidator.addOCLDocument( oclFiles.get( i ), console );
             }
-            oclValidator.prepare( validator, console );
+            oclValidator.prepare( console );
         }
 
         loader = new CimModelLoader( );
