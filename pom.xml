@@ -28,7 +28,7 @@
  
   <groupId>io.github.riseclipse</groupId>
   <artifactId>riseclipse-validator-cgmes-3-0-0</artifactId>
-  <version>1.0.3</version>
+  <version>1.0.4-SNAPSHOT</version>
   <packaging>pom</packaging>
   
   <parent>
